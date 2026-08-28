@@ -33,6 +33,7 @@
     .section-title{margin:0;font-size:clamp(40px,4.8vw,72px);font-weight:560;letter-spacing:-.06em;line-height:.98}
     .body-copy{color:#687066;font-size:15px;line-height:1.75}
     .btn{min-height:52px;display:inline-flex;align-items:center;justify-content:center;gap:18px;padding:0 25px;border:1px solid var(--ink);background:var(--ink);color:#fff;font-size:10px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:.2s ease}
+    [hidden]{display:none!important}
     .btn:hover,.btn:focus-visible{background:var(--mineral);border-color:var(--mineral);outline:none}
     .btn-light{background:var(--paper);border-color:var(--paper);color:var(--ink)}
     .btn-light:hover{background:#fff;border-color:#fff}
@@ -525,6 +526,7 @@
       };
 
       function showStep(step) {
+        step = Math.max(1, Math.min(4, Number(step) || 1));
         currentStep = step;
         steps.forEach(el => el.classList.toggle('active', Number(el.dataset.step) === step));
         progressBar.style.width = `${step * 25}%`;
@@ -600,7 +602,7 @@
         return valid;
       }
 
-      nextButton.addEventListener('click', () => { if (validateStep(currentStep)) showStep(currentStep + 1); });
+      nextButton.addEventListener('click', () => { if (currentStep < 4 && validateStep(currentStep)) showStep(currentStep + 1); });
       backButton.addEventListener('click', () => showStep(currentStep - 1));
 
       function classify(data) {
@@ -658,7 +660,9 @@
           await sendLeadToGoogleSheets(data);
         } catch (sendError) {
           console.error('Falha ao registrar cadastro no Google Sheets:', sendError);
-          globalError.textContent = 'Não foi possível enviar seu cadastro agora. Tente novamente em instantes.';
+          globalError.textContent = googleAppsScriptUrl && !googleAppsScriptUrl.includes('COLE_AQUI')
+            ? 'Não foi possível enviar seu cadastro agora. Tente novamente em instantes.'
+            : 'O cadastro online ainda está sendo ativado. Fale com nosso atendimento para continuar.';
           globalError.classList.add('visible');
           submitButton.disabled = false;
           submitButton.textContent = originalSubmitText;

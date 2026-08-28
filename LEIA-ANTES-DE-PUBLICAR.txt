@@ -1,0 +1,19 @@
+ADVERBIO ATACADO — ATIVAÇÃO DO FORMULÁRIO
+
+1. Publique o arquivo google-apps-script.gs em script.google.com como App da Web.
+2. Configuração da implantação:
+   - Executar como: você
+   - Quem tem acesso: qualquer pessoa
+3. Copie a URL pública que termina em /exec.
+4. Abra config.js e substitua:
+   COLE_AQUI_A_URL_DO_APPS_SCRIPT
+   pela URL /exec.
+5. Atualize no mesmo config.js os WhatsApps reais das consultoras.
+6. Faça commit de todos os arquivos no GitHub e redeploy no Easypanel.
+7. Teste uma inscrição CPF e uma CNPJ.
+
+Correções desta versão:
+- impede aparecer “Etapa 5 de 4”;
+- oculta corretamente o botão Continuar na etapa final;
+- impede avanço além da etapa 4;
+- mantém envio para Google Sheets + redirecionamento ao WhatsApp.
