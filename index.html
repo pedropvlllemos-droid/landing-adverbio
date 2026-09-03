@@ -663,64 +663,69 @@
           const frameName = `adverbio-submit-${requestId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
           const iframe = document.createElement('iframe');
           iframe.name = frameName;
+          iframe.src = 'about:blank';
           iframe.style.display = 'none';
           iframe.setAttribute('aria-hidden', 'true');
-          document.body.appendChild(iframe);
+
+          let submitted = false;
+          let finished = false;
 
           const cleanup = () => {
-            window.removeEventListener('message', onMessage);
             clearTimeout(timer);
-            setTimeout(() => iframe.remove(), 50);
+            setTimeout(() => iframe.remove(), 500);
           };
 
-          const onMessage = event => {
-            if (event.source !== iframe.contentWindow) return;
+          const submitToGoogle = () => {
+            const postForm = document.createElement('form');
+            postForm.method = 'POST';
+            postForm.action = googleAppsScriptUrl;
+            postForm.target = frameName;
+            postForm.style.display = 'none';
 
-            const response = event.data || {};
-            if (
-              response.channel !== 'adverbio-atacado' ||
-              response.requestId !== requestId
-            ) return;
+            const payload = { ...data, _requestId: requestId };
 
-            cleanup();
+            Object.entries(payload).forEach(([key, value]) => {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = key;
+              input.value = value === null || value === undefined ? '' : String(value);
+              postForm.appendChild(input);
+            });
 
-            if (response.ok === true) {
-              resolve(response);
-            } else {
-              reject(new Error(response.error || 'O Google não confirmou a gravação.'));
+            document.body.appendChild(postForm);
+            submitted = true;
+            postForm.submit();
+            postForm.remove();
+          };
+
+          iframe.addEventListener('load', () => {
+            // Primeiro load = about:blank. Só depois enviamos os dados.
+            if (!submitted) {
+              submitToGoogle();
+              return;
             }
-          };
 
-          window.addEventListener('message', onMessage);
-
-          const timer = setTimeout(() => {
+            // Segundo load = resposta do Apps Script.
+            // O navegador não permite ler o conteúdo por ser outro domínio,
+            // mas o carregamento concluído confirma que o POST terminou.
+            if (finished) return;
+            finished = true;
             cleanup();
-            reject(new Error('Tempo esgotado aguardando confirmação do cadastro.'));
-          }, 20000);
-
-          const postForm = document.createElement('form');
-          postForm.method = 'POST';
-          postForm.action = googleAppsScriptUrl;
-          postForm.target = frameName;
-          postForm.style.display = 'none';
-
-          const payload = { ...data, _requestId: requestId };
-
-          Object.entries(payload).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value === null || value === undefined ? '' : String(value);
-            postForm.appendChild(input);
+            resolve({ ok: true, requestId });
           });
 
-          document.body.appendChild(postForm);
-          postForm.submit();
-          postForm.remove();
+          const timer = setTimeout(() => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            reject(new Error('Tempo esgotado ao enviar o cadastro.'));
+          }, 30000);
+
+          document.body.appendChild(iframe);
         });
       }
 
-            form.addEventListener('submit', async event => {
+      form.addEventListener('submit', async event => {
         event.preventDefault();
         if (!validateStep(4)) return;
         const data = Object.fromEntries(new FormData(form).entries());
