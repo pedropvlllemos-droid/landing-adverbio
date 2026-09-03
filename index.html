@@ -324,8 +324,27 @@
 
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '2288482528673560');
+  fbq('track', 'PageView');
+  fbq('track', 'ViewContent', {content_name: 'Atacado Adverbio'});
+  </script>
+  <!-- End Meta Pixel Code -->
 </head>
 <body>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=2288482528673560&ev=PageView&noscript=1"
+  alt=""></noscript>
+
   <div class="announcement"><p>Atacado Adverbio</p><span></span><p>Condições para lojistas e revendedores</p></div>
   <header class="header">
     <div class="header-inner">
@@ -712,6 +731,14 @@
         globalError.classList.remove('visible');
         try {
           await sendLeadToGoogleSheets(data);
+
+          // Meta Pixel: conta Lead somente depois que o Google confirma a gravação.
+          if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+              content_name: 'Cadastro Atacado Adverbio',
+              content_category: data.documentType
+            });
+          }
         } catch (sendError) {
           console.error('Falha ao registrar cadastro no Google Sheets:', sendError);
           globalError.textContent = 'Não foi possível confirmar seu cadastro na nossa central. Tente novamente em instantes ou fale com nosso atendimento.';
@@ -740,7 +767,16 @@
         document.getElementById('successTitle').textContent = `${data.name.split(' ')[0]}, obrigado pelo interesse.`;
         document.getElementById('successText').textContent = `Recebemos suas informações. Continue pelo WhatsApp para falar com a equipe indicada para o seu atendimento.`;
         const message = encodeURIComponent(`Olá! Finalizei meu cadastro de atacado Adverbio. Meu nome é ${data.name}, perfil ${data.documentType}, de ${data.city}/${data.state}. Compra estimada: ${data.purchaseRange}.`);
-        document.getElementById('whatsappButton').href = `https://wa.me/${result.consultant.phone}?text=${message}`;
+        const whatsappButton = document.getElementById('whatsappButton');
+        whatsappButton.href = `https://wa.me/${result.consultant.phone}?text=${message}`;
+        whatsappButton.onclick = () => {
+          if (typeof fbq === 'function') {
+            fbq('track', 'Contact', {
+              content_name: 'WhatsApp após cadastro',
+              content_category: data.documentType
+            });
+          }
+        };
         formContent.style.display = 'none';
         successBox.classList.add('active');
         successBox.scrollIntoView({behavior:'smooth', block:'center'});
@@ -782,6 +818,12 @@
           const profile = button.dataset.directProfile;
           const consultant = profile === 'CNPJ' ? consultants.business : consultants.starter;
           const message = encodeURIComponent(`Olá! Acessei a página de atacado da Adverbio e gostaria de falar com o atendimento. Realizo minhas compras com ${profile}.`);
+          if (typeof fbq === 'function') {
+            fbq('track', 'Contact', {
+              content_name: 'WhatsApp direto',
+              content_category: profile
+            });
+          }
           window.open(`https://wa.me/${consultant.phone}?text=${message}`, '_blank', 'noopener');
           setQuickContact(false);
         });
