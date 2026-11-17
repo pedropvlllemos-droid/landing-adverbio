@@ -860,6 +860,24 @@
               content_name: 'Cadastro Atacado Adverbio',
               content_category: data.documentType
             });
+
+            // Lojista qualificado = CNPJ + loja (física e/ou online)
+            // + compra acima de R$ 1.500 + compra em até 30 dias.
+            var lojistaQualificado =
+              data.documentType === 'CNPJ' &&
+              ['Loja física e online', 'Loja física', 'Loja online'].indexOf(data.operation) !== -1 &&
+              ['Até R$ 1.500', 'Ainda não sei'].indexOf(data.purchaseRange) === -1 &&
+              data.timeline !== 'Estou pesquisando';
+
+            if (lojistaQualificado) {
+              fbq('trackCustom', 'LeadQualificado', {
+                content_name: 'Cadastro Atacado Adverbio',
+                content_category: data.documentType,
+                faixa_compra: data.purchaseRange,
+                operacao: data.operation,
+                prazo: data.timeline
+              });
+            }
           }
         } catch (sendError) {
           console.error('Falha ao registrar cadastro no Google Sheets:', sendError);
